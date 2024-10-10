@@ -1,9 +1,10 @@
 import 'dart:convert';
 
+import 'package:api/user.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-List<dynamic> users = [];
+List<User> users = [];
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,23 +25,24 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: users.length,
             itemBuilder: (context, index) {
               final user = users[index];
+              final name = user.name.first;
+              final email = user.email;
+              final genderColor =
+                  user.gender == "male" ? Colors.red : Colors.blue;
 
-              final name = user['name'];
-              final title = name['title'];
-              final first = name['first'];
-              final last = name['last'];
+              // final name = user['name'];
+              // final title = name['title'];
+              // final first = name['first'];
+              // final last = name['last'];
 
-              final email = user['email'];
+              // final email = user['email'];
 
-              final avt = user['picture'];
-              final avtUrl = avt['thumbnail'];
+              // final avt = user['picture'];
+              // final avtUrl = avt['thumbnail'];
               return ListTile(
-                leading: ClipRRect(
-                  borderRadius: const BorderRadius.all(Radius.circular(100)),
-                  child: Image.network(avtUrl),
-                ),
-                title: Text("$title $first $last"),
-                subtitle: Text(email),
+                title: Text(user.name.first),
+                tileColor: genderColor,
+                subtitle: Text(user.cell),
               );
             }),
         floatingActionButton: FloatingActionButton(
@@ -58,8 +60,23 @@ class _HomeScreenState extends State<HomeScreen> {
     final response = await http.get(uri);
     final body = response.body;
     final json = jsonDecode(body);
+
+    final results = json['results'] as List<dynamic>;
+    final transformed = results.map((e) {
+      final name = userName(
+          title: e['name']['title'],
+          first: e['name']['first'],
+          last: e['name']['last']);
+      return User(
+          gender: e['gender'],
+          name: name,
+          email: e['email'],
+          phone: e['phone'],
+          cell: e['cell'],
+          nat: e['nat']);
+    }).toList();
     setState(() {
-      users = json['results'];
+      users = transformed;
     });
     debugPrint("Fetch User completed");
   }
